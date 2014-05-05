@@ -71,7 +71,7 @@ func usage() {
 
 Usage:
 
-	go command [arguments]
+	gpkg command [arguments]
 
 The commands are:
 
