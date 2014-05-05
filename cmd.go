@@ -35,7 +35,7 @@ func search(query string) error {
 		return err
 	}
 	for _, p := range s.Hits {
-		fmt.Printf("%s - %s\n", p.Package, p.Synopsis)
+		fmt.Printf("%s %s\n", p.StaticRank, p.Package, p.Synopsis)
 	}
 	return nil
 }
@@ -68,7 +68,7 @@ func show(id string) error {
 	return nil
 }
 
-func gocmd(verbose bool, param ...string) error {
+func gocmd(param ...string) error {
 	cmd := exec.Command("go", param...)
 	if err := cmd.Start(); err != nil {
 		return err
@@ -76,24 +76,31 @@ func gocmd(verbose bool, param ...string) error {
 	if err := cmd.Wait(); err != nil {
 		return err
 	}
-	if verbose {
-		if output, err := cmd.CombinedOutput(); err != nil {
-			return err
-		} else {
-			fmt.Printf("%s\n", output)
-		}
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return err
+	} else {
+		fmt.Printf("%s\n", output)
 	}
 	return nil
 }
 
-func clean(verbose bool, id, goPath string) error {
-	for _, v := range strings.Split(goPath, ":") {
+func clean(id string) error {
+	for _, v := range strings.Split(os.Getenv("GOPATH"), ":") {
 		if err := os.RemoveAll(v + id); err != nil {
 			return err
 		}
-		if verbose {
-			fmt.Printf("Removed: %s\n", v+id)
-		}
+		fmt.Printf("Removed: %s\n", v+id)
 	}
 	return nil
+}
+
+func variable() {
+	fmt.Println("$GOPATH:")
+	for i, v := range strings.Split(os.Getenv("GOPATH"), ":") {
+		if i == 0 {
+			fmt.Printf("\t%s (default)\n", v)
+		} else {
+			fmt.Printf("\t%s\n", v)
+		}
+	}
 }

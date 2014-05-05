@@ -4,11 +4,66 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"strings"
 )
 
 func init() {
 	flag.Parse()
+}
+
+func help(cmd string) {
+	switch cmd {
+	case "var":
+		usage := `usage: gpkg var
+
+Display all Go environment variables.
+`
+		fmt.Println(usage)
+	case "upgrade":
+		usage := `usage: gpkg upgrade [package]
+
+Update the named packages and their dependencies.
+`
+		fmt.Println(usage)
+	case "install":
+		usage := `usage: gpkg install [package]
+
+Install compiles and installs the packages named by the import paths,
+along with their dependencies.
+`
+		fmt.Println(usage)
+	case "remove":
+		usage := `usage: gpkg remove [package]
+
+Remove object files and package source directories.
+`
+		fmt.Println(usage)
+	case "download":
+		usage := `usage: gpkg download [package]
+
+Download the package only; that is, it instructs get not to install
+the packages.
+`
+		fmt.Println(usage)
+	case "search":
+		usage := `usage: gpkg search [key words]
+
+Search packages by key words.
+
+If searching for multi key words with spaces, please add a pair of
+quoters:
+
+	> go search "rbac web"
+`
+		fmt.Println(usage)
+	case "show":
+		usage := `usage: gpkg show [package]
+
+Show a readable record for the package.
+`
+		fmt.Println(usage)
+	default:
+		usage()
+	}
 }
 
 func usage() {
@@ -20,22 +75,20 @@ Usage:
 
 The commands are:
 
-	path		Show $GOPATH
+	var			Show all of Go environment variables
 	upgrade		Perform an upgrade
 	install		Install new packages
 	remove		Remove packages
 	download	Download the package only
 	search		Search the package list for a regex pattern
 	show		Show a readable record for the package
-	depends		Show dependency information for a package
 
 Use "gpkg help [command]" for more information about a command.`
 	fmt.Println(usage)
 }
 
 func main() {
-	goPath := os.Getenv("GOPATH")
-	if goPath == "" {
+	if os.Getenv("GOPATH") == "" {
 		fmt.Println("You must install Go and setup the environment variable $GOPATH first.")
 		return
 	}
@@ -43,39 +96,30 @@ func main() {
 		usage()
 		return
 	}
-	var verbose bool
-	flag.BoolVar(&verbose, "v", false, "Display verbose")
 	switch flag.Arg(0) {
-	case "path":
-		fmt.Println("GOPATH:")
-		for i, v := range strings.Split(goPath, ":") {
-			if i == 0 {
-				fmt.Printf("\t%s (default)\n", v)
-			} else {
-				fmt.Printf("\t%s\n", v)
-			}
-		}
+	case "var":
+		variable()
 	case "upgrade":
 		id := flag.Arg(1)
-		if err := gocmd(verbose, "get", "-u", id); err != nil {
+		if err := gocmd("get", "-u", id); err != nil {
 			fmt.Println(err)
 		}
 	case "install":
 		id := flag.Arg(1)
-		if err := gocmd(verbose, "get", id); err != nil {
+		if err := gocmd("get", id); err != nil {
 			fmt.Println(err)
 		}
 	case "remove":
 		id := flag.Arg(1)
-		if err := gocmd(verbose, "clean", id); err != nil {
+		if err := gocmd("clean", id); err != nil {
 			fmt.Println(err)
 		}
-		if err := clean(verbose, id, goPath); err != nil {
+		if err := clean(id); err != nil {
 			fmt.Println(err)
 		}
 	case "download":
 		id := flag.Arg(1)
-		if err := gocmd(verbose, "get", "-d", id); err != nil {
+		if err := gocmd("get", "-d", id); err != nil {
 			fmt.Println(err)
 		}
 	case "search":
@@ -88,7 +132,8 @@ func main() {
 		if err := show(id); err != nil {
 			fmt.Println(err)
 		}
-	case "depends":
+	case "help":
+		help(flag.Arg(1))
 	default:
 		usage()
 	}
