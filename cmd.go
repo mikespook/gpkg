@@ -3,8 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"go/doc"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"strings"
@@ -21,7 +23,7 @@ type Search struct {
 }
 
 func search(query string) error {
-	resp, err := http.Get(fmt.Sprintf(apiSearch, query))
+	resp, err := http.Get(fmt.Sprintf(apiSearch, url.QueryEscape(query)))
 	if err != nil {
 		return err
 	}
@@ -35,7 +37,9 @@ func search(query string) error {
 		return err
 	}
 	for _, p := range s.Hits {
-		fmt.Printf("%s %s\n", p.StaticRank, p.Package, p.Synopsis)
+		fmt.Printf("%s\n\n", p.Package)
+		doc.ToText(os.Stdout, p.Synopsis, "  ", "", 74)
+		fmt.Printf("\n")
 	}
 	return nil
 }
